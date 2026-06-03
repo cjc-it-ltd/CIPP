@@ -33,10 +33,3 @@ app.log
 # AI rules
 .*/rules
 AGENTS.md
-
-# jetbrains
-.idea
-
-# azurite
-__*
-AzuriteConfig

@@ -231,31 +231,20 @@ export const CippFormComponent = (props) => {
       return (
         <>
           <div>
-            <Controller
-              name={convertedName}
-              control={formControl.control}
-              defaultValue={defaultValue ?? ""}
-              rules={validators}
-              render={({ field }) => (
-                <Tooltip title={label || ""} placement="top" arrow>
-                  <TextField
-                    type="password"
-                    variant="filled"
-                    fullWidth
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                    {...other}
-                    label={label}
-                    value={field.value ?? ""}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    name={field.name}
-                    inputRef={field.ref}
-                  />
-                </Tooltip>
-              )}
-            />
+            <Tooltip title={label || ""} placement="top" arrow>
+              <TextField
+                type="password"
+                variant="filled"
+                fullWidth
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                {...other}
+                {...formControl.register(convertedName, { ...validators })}
+                label={label}
+                defaultValue={defaultValue}
+              />
+            </Tooltip>
           </div>
           {get(errors, convertedName, {})?.message && (
             <Typography variant="subtitle3" color="error">

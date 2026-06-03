@@ -11,8 +11,6 @@ export const CippTextFieldWithVariables = ({
   value = "",
   onChange,
   includeSystemVariables = false,
-  autocompleteTrigger = "%",
-  autocompleteOptions = null,
   ...textFieldProps
 }) => {
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -25,18 +23,6 @@ export const CippTextFieldWithVariables = ({
   // Memoize tenant filter to prevent unnecessary re-renders
   const tenantFilter = useMemo(() => settings?.currentTenant || null, [settings?.currentTenant]);
 
-  const getInputElement = useCallback(() => {
-    if (!textFieldRef.current) {
-      return null;
-    }
-
-    return (
-      textFieldRef.current.querySelector("textarea") ||
-      textFieldRef.current.querySelector("input") ||
-      textFieldRef.current
-    );
-  }, []);
-
   // Safely close autocomplete
   const closeAutocomplete = useCallback(() => {
     setShowAutocomplete(false);
@@ -47,12 +33,7 @@ export const CippTextFieldWithVariables = ({
   // Track cursor position
   const handleSelectionChange = () => {
     if (textFieldRef.current) {
-      // Check for input first, then textarea
-      const inputElement =
-        textFieldRef.current.querySelector("input") ||
-        textFieldRef.current.querySelector("textarea") ||
-        textFieldRef.current;
-      setCursorPosition(inputElement?.selectionStart || 0);
+      setCursorPosition(textFieldRef.current.selectionStart || 0);
     }
   };
 
@@ -67,7 +48,7 @@ export const CippTextFieldWithVariables = ({
     };
   };
 
-  // Handle input changes and detect trigger sequence
+  // Handle input changes and detect % trigger
   const handleInputChange = (event) => {
     const newValue = event.target.value;
     const cursorPos = event.target.selectionStart;
@@ -80,28 +61,21 @@ export const CippTextFieldWithVariables = ({
       onChange(event);
     }
 
-    const justTypedTrigger =
-      cursorPos >= autocompleteTrigger.length &&
-      newValue.substring(cursorPos - autocompleteTrigger.length, cursorPos) === autocompleteTrigger;
-
-    // Check if trigger was just typed
-    if (justTypedTrigger) {
+    // Check if % was just typed
+    if (newValue[cursorPos - 1] === "%") {
       // Position autocomplete near cursor
       setAutocompleteAnchor(textFieldRef.current);
       setSearchQuery("");
       setShowAutocomplete(true);
     } else if (showAutocomplete) {
       // Update search query if autocomplete is open
-      const lastTriggerIndex = newValue.lastIndexOf(autocompleteTrigger, cursorPos - 1);
-      if (lastTriggerIndex !== -1) {
-        const query = newValue.substring(lastTriggerIndex + autocompleteTrigger.length, cursorPos);
+      const lastPercentIndex = newValue.lastIndexOf("%", cursorPos - 1);
+      if (lastPercentIndex !== -1) {
+        const query = newValue.substring(lastPercentIndex + 1, cursorPos);
         setSearchQuery(query);
 
-        // Close autocomplete when the query no longer resembles an in-progress token.
-        const shouldCloseForPercent = autocompleteTrigger === "%" && (query.includes(" ") || /[^a-zA-Z0-9_]/.test(query));
-        const shouldCloseForMustache = autocompleteTrigger === "{{" && (query.includes("\n") || query.includes("}"));
-
-        if (shouldCloseForPercent || shouldCloseForMustache) {
+        // Close autocomplete if user typed space or special characters (except %)
+        if (query.includes(" ") || /[^a-zA-Z0-9_]/.test(query)) {
           closeAutocomplete();
         }
       } else {
@@ -123,24 +97,20 @@ export const CippTextFieldWithVariables = ({
       // Get fresh cursor position from the DOM
       let cursorPos = cursorPosition;
       if (textFieldRef.current) {
-        // Check for input first, then textarea
-        const inputElement =
-          textFieldRef.current.querySelector("input") ||
-          textFieldRef.current.querySelector("textarea") ||
-          textFieldRef.current;
+        const inputElement = textFieldRef.current.querySelector("input") || textFieldRef.current;
         if (inputElement && typeof inputElement.selectionStart === "number") {
           cursorPos = inputElement.selectionStart;
         }
       }
 
-      // Find the trigger sequence that opened autocomplete
-      const lastTriggerIndex = currentValue.lastIndexOf(autocompleteTrigger, cursorPos - 1);
+      // Find the % that triggered the autocomplete
+      const lastPercentIndex = currentValue.lastIndexOf("%", cursorPos - 1);
 
-      if (lastTriggerIndex !== -1) {
-        // Replace from trigger to cursor position with the selected variable
-        const beforeTrigger = currentValue.substring(0, lastTriggerIndex);
+      if (lastPercentIndex !== -1) {
+        // Replace from % to cursor position with the selected variable
+        const beforePercent = currentValue.substring(0, lastPercentIndex);
         const afterCursor = currentValue.substring(cursorPos);
-        const newValue = beforeTrigger + variableString + afterCursor;
+        const newValue = beforePercent + variableString + afterCursor;
 
         // Create synthetic event for onChange
         const syntheticEvent = {
@@ -155,14 +125,11 @@ export const CippTextFieldWithVariables = ({
         // Set cursor position after the inserted variable
         setTimeout(() => {
           if (textFieldRef.current) {
-            const newCursorPos = lastTriggerIndex + variableString.length;
+            const newCursorPos = lastPercentIndex + variableString.length;
 
             // Access the actual input element for Material-UI TextField
-            // Check for input first, then textarea
             const inputElement =
-              textFieldRef.current.querySelector("input") ||
-              textFieldRef.current.querySelector("textarea") ||
-              textFieldRef.current;
+              textFieldRef.current.querySelector("input") || textFieldRef.current;
             if (inputElement && inputElement.setSelectionRange) {
               inputElement.setSelectionRange(newCursorPos, newCursorPos);
               inputElement.focus();
@@ -174,14 +141,7 @@ export const CippTextFieldWithVariables = ({
 
       closeAutocomplete();
     },
-    [
-      value,
-      cursorPosition,
-      onChange,
-      closeAutocomplete,
-      autocompleteTrigger,
-      getInputElement,
-    ]
+    [value, cursorPosition, onChange, closeAutocomplete]
   );
 
   // Handle key events
@@ -248,7 +208,6 @@ export const CippTextFieldWithVariables = ({
         tenantFilter={tenantFilter}
         includeSystemVariables={includeSystemVariables}
         position={getCursorPosition()}
-        customVariables={autocompleteOptions}
       />
     </>
   );

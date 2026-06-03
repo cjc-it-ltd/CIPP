@@ -21,7 +21,6 @@ import { Box } from "@mui/system";
 const CippApiClientManagement = () => {
   const [openAddClientDialog, setOpenAddClientDialog] = useState(false);
   const [openAddExistingAppDialog, setOpenAddExistingAppDialog] = useState(false);
-  const [addClientRetryPayload, setAddClientRetryPayload] = useState(null);
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
 
   const formControl = useForm({
@@ -59,33 +58,6 @@ const CippApiClientManagement = () => {
       data: {},
     });
     handleMenuClose();
-  };
-
-  const getRetryPayload = (result) => {
-    const firstResult = result?.Results?.[0];
-    if (firstResult?.retryAvailable === true) {
-      return firstResult.retryPayload;
-    }
-    return null;
-  };
-
-  const mergeApiDataWithRetry = (baseData, retryPayload) => {
-    if (!retryPayload) {
-      return baseData;
-    }
-
-    return {
-      ...baseData,
-      ...retryPayload,
-      CIPPAPI: {
-        ...(baseData.CIPPAPI || {}),
-        ...(retryPayload.CIPPAPI || {}),
-      },
-    };
-  };
-
-  const handleAddClientAfterEffect = (result) => {
-    setAddClientRetryPayload(getRetryPayload(result));
   };
 
   const actions = [
@@ -205,7 +177,6 @@ const CippApiClientManagement = () => {
                 <MenuItem
                   onClick={() => {
                     handleMenuClose();
-                    setAddClientRetryPayload(null);
                     setOpenAddClientDialog(true);
                   }}
                 >
@@ -328,13 +299,8 @@ const CippApiClientManagement = () => {
       <CippApiDialog
         createDialog={{
           open: openAddClientDialog,
-          handleClose: () => {
-            setOpenAddClientDialog(false);
-            setAddClientRetryPayload(null);
-          },
+          handleClose: () => setOpenAddClientDialog(false),
         }}
-        allowResubmit={true}
-        dialogAfterEffect={handleAddClientAfterEffect}
         title="Add Client"
         fields={[
           {
@@ -378,16 +344,14 @@ const CippApiClientManagement = () => {
         api={{
           type: "POST",
           url: "/api/ExecApiClient",
-          data: mergeApiDataWithRetry({ Action: "AddUpdate" }, addClientRetryPayload),
+          data: { Action: "AddUpdate" },
           relatedQueryKeys: [`ApiClients`],
         }}
       />
       <CippApiDialog
         createDialog={{
           open: openAddExistingAppDialog,
-          handleClose: () => {
-            setOpenAddExistingAppDialog(false);
-          },
+          handleClose: () => setOpenAddExistingAppDialog(false),
         }}
         title="Add Existing App"
         fields={[
@@ -447,7 +411,7 @@ const CippApiClientManagement = () => {
         api={{
           type: "POST",
           url: "/api/ExecApiClient",
-          data: { Action: "!AddUpdate", CIPPAPI: { ResetSecret: true } },
+          data: { Action: "!AddUpdate" },
           relatedQueryKeys: [`ApiClients`],
         }}
       />

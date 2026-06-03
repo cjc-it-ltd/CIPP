@@ -19,76 +19,9 @@ const AppApprovalTemplateForm = ({
   refetchKey,
   hideSubmitButton = false, // New prop to hide the submit button when used in a drawer
 }) => {
-  const forbiddenManifestProperties = ["keyCredentials", "passwordCredentials"];
   const [selectedPermissionSet, setSelectedPermissionSet] = useState(null);
   const [permissionsLoaded, setPermissionsLoaded] = useState(false);
   const [permissionSetDrawerVisible, setPermissionSetDrawerVisible] = useState(false);
-  const [manifestSanitizeMessage, setManifestSanitizeMessage] = useState(null);
-
-  const getManifestValidationError = (manifest) => {
-    if (!manifest.displayName) {
-      return "Application manifest must include a 'displayName' property";
-    }
-
-    if (manifest.signInAudience && manifest.signInAudience !== "AzureADMyOrg") {
-      return "signInAudience must be null, undefined, or 'AzureADMyOrg' for security reasons";
-    }
-
-    const presentForbiddenProperties = forbiddenManifestProperties.filter(
-      (propertyName) => Object.prototype.hasOwnProperty.call(manifest, propertyName)
-    );
-    if (presentForbiddenProperties.length > 0) {
-      return `Remove unsupported manifest properties: ${presentForbiddenProperties.join(", ")}.`;
-    }
-
-    return null;
-  };
-
-  const handleSanitizeManifest = () => {
-    const currentManifest = formControl.getValues("applicationManifest");
-
-    if (!currentManifest) {
-      setManifestSanitizeMessage({
-        severity: "warning",
-        text: "Paste a manifest first, then use cleanup.",
-      });
-      return;
-    }
-
-    try {
-      const parsedManifest = JSON.parse(currentManifest);
-      const removedProperties = forbiddenManifestProperties.filter((propertyName) =>
-        Object.prototype.hasOwnProperty.call(parsedManifest, propertyName)
-      );
-
-      if (removedProperties.length === 0) {
-        setManifestSanitizeMessage({
-          severity: "info",
-          text: "No forbidden sections found. Your manifest is already clean.",
-        });
-        return;
-      }
-
-      removedProperties.forEach((propertyName) => {
-        delete parsedManifest[propertyName];
-      });
-
-      formControl.setValue("applicationManifest", JSON.stringify(parsedManifest, null, 2), {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-
-      setManifestSanitizeMessage({
-        severity: "success",
-        text: `Removed forbidden sections: ${removedProperties.join(", ")}.`,
-      });
-    } catch (error) {
-      setManifestSanitizeMessage({
-        severity: "error",
-        text: "Manifest JSON is invalid. Fix the JSON and try cleanup again.",
-      });
-    }
-  };
 
   // Watch for app type selection changes
   const selectedAppType = useWatch({
@@ -106,28 +39,6 @@ const AppApprovalTemplateForm = ({
     control: formControl?.control,
     name: "applicationManifest",
   });
-
-  const getForbiddenManifestPropertiesPresent = (manifestValue) => {
-    if (!manifestValue) {
-      return [];
-    }
-
-    try {
-      const manifest = JSON.parse(manifestValue);
-      return forbiddenManifestProperties.filter((propertyName) =>
-        Object.prototype.hasOwnProperty.call(manifest, propertyName)
-      );
-    } catch {
-      return [];
-    }
-  };
-
-  const forbiddenPropertiesInCurrentManifest =
-    selectedAppType === "ApplicationManifest"
-      ? getForbiddenManifestPropertiesPresent(selectedApplicationManifest)
-      : [];
-  const showSanitizeManifestButton = forbiddenPropertiesInCurrentManifest.length > 0;
-  const isTemplateFormValid = formControl?.formState?.isValid ?? false;
 
   // Watch for app selection changes to update template name
   const selectedApp = useWatch({
@@ -325,22 +236,6 @@ const AppApprovalTemplateForm = ({
     }
   }, [isEditing, isCopy, templateData]);
 
-  useEffect(() => {
-    if (!formControl) {
-      return;
-    }
-
-    formControl.trigger();
-  }, [
-    formControl,
-    selectedAppType,
-    selectedApplicationManifest,
-    selectedApp,
-    selectedGalleryTemplate,
-    selectedPermissionSetValue,
-    templateData,
-  ]);
-
   // Handle form submission
   const handleSubmit = (data) => {
     let appDisplayName, appId, galleryTemplateId, applicationManifest;
@@ -354,12 +249,11 @@ const AppApprovalTemplateForm = ({
       try {
         applicationManifest = JSON.parse(data.applicationManifest);
 
-        const manifestValidationError = getManifestValidationError(applicationManifest);
-        if (manifestValidationError) {
-          setManifestSanitizeMessage({
-            severity: "error",
-            text: manifestValidationError,
-          });
+        // Validate signInAudience - only allow null/undefined or "AzureADMyOrg"
+        if (
+          applicationManifest.signInAudience &&
+          applicationManifest.signInAudience !== "AzureADMyOrg"
+        ) {
           return; // Don't submit if validation fails
         }
 
@@ -587,27 +481,24 @@ const AppApprovalTemplateForm = ({
                     validate: (value) => {
                       try {
                         const manifest = JSON.parse(value);
-                        return getManifestValidationError(manifest) ?? true;
+
+                        // Check for minimum required property
+                        if (!manifest.displayName) {
+                          return "Application manifest must include a 'displayName' property";
+                        }
+
+                        // Validate signInAudience if present
+                        if (manifest.signInAudience && manifest.signInAudience !== "AzureADMyOrg") {
+                          return "signInAudience must be null, undefined, or 'AzureADMyOrg' for security reasons";
+                        }
+
+                        return true;
                       } catch (e) {
                         return "Invalid JSON format";
                       }
                     },
                   }}
                 />
-                <Stack spacing={1} sx={{ mt: 1 }}>
-                  {showSanitizeManifestButton && (
-                    <Box>
-                      <Button variant="outlined" onClick={handleSanitizeManifest}>
-                        Remove Forbidden Sections
-                      </Button>
-                    </Box>
-                  )}
-                  {manifestSanitizeMessage && (
-                    <Alert severity={manifestSanitizeMessage.severity}>
-                      {manifestSanitizeMessage.text}
-                    </Alert>
-                  )}
-                </Stack>
               </CippFormCondition>
 
               <CippFormCondition
@@ -656,7 +547,7 @@ const AppApprovalTemplateForm = ({
                       variant="contained"
                       color="primary"
                       onClick={formControl.handleSubmit(handleSubmit)}
-                      disabled={updatePermissions.isPending || !isTemplateFormValid}
+                      disabled={updatePermissions.isPending}
                     >
                       {isEditing ? "Update Template" : "Create Template"}
                     </Button>

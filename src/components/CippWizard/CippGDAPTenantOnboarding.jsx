@@ -45,7 +45,11 @@ export const CippGDAPTenantOnboarding = (props) => {
   });
 
   const relationshipList = ApiGetCall({
-    url: "/api/ListGDAPRelationships",
+    url: "/api/ListGraphRequest",
+    data: {
+      TenantFilter: "",
+      Endpoint: "tenantRelationships/delegatedAdminRelationships",
+    },
     queryKey: "GDAPRelationshipOnboarding-wizard",
   });
 
