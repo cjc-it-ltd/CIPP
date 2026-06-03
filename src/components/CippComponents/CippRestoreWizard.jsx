@@ -44,7 +44,6 @@ const TABLE_LABELS = {
   AppPermissions: "App Permissions",
   CommunityRepos: "Community Repositories",
   Config: "CIPP Configuration",
-  CustomPowershellScripts: "Custom PowerShell/Test Scripts",
   CustomData: "Custom Data",
   CustomRoles: "Custom Roles",
   Domains: "Domains",

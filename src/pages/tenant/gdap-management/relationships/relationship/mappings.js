@@ -12,7 +12,7 @@ const Page = () => {
   const { id } = router.query;
 
   const relationshipRequest = ApiGetCall({
-    url: `/api/ListGDAPRelationships?id=${id}`,
+    url: `/api/ListGraphRequest?Endpoint=tenantRelationships/delegatedAdminRelationships/${id}`,
     queryKey: `ListRelationships-${id}`,
   });
 

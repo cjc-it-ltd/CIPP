@@ -79,7 +79,6 @@ export const CippTenantTable = ({
       data: { Name: "Name", TenantFilter: "customerId" },
       confirmText: "Select the cache type to refresh for [displayName]:",
       multiPost: false,
-      allowResubmit: true,
       hideBulk: true,
       fields: [
         {
@@ -98,7 +97,8 @@ export const CippTenantTable = ({
         },
       ],
       customDataformatter: (rowData, actionData, formData) => {
-        const tenantFilter = rowData?.defaultDomainName || rowData?.customerId || "";
+        const tenantFilter = rowData?.customerId || rowData?.defaultDomainName || "";
+        // Extract value from autoComplete object (which returns { label, value } or just value)
         const cacheTypeName = formData.Name?.value || formData.Name || "";
         return {
           Name: cacheTypeName,

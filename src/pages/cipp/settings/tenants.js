@@ -83,7 +83,6 @@ const Page = () => {
       data: { Name: "Name", TenantFilter: "customerId" },
       confirmText: "Select the cache type to refresh for [displayName]:",
       multiPost: false,
-      allowResubmit: true,
       hideBulk: true,
       fields: [
         {
@@ -102,7 +101,7 @@ const Page = () => {
         },
       ],
       customDataformatter: (rowData, actionData, formData) => {
-        const tenantFilter = rowData?.defaultDomainName || rowData?.customerId || "";
+        const tenantFilter = rowData?.customerId || rowData?.defaultDomainName || "";
         const cacheTypeName = formData.Name?.value || formData.Name || "";
         return {
           Name: cacheTypeName,

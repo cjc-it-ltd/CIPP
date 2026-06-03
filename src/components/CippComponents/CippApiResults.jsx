@@ -188,23 +188,21 @@ export const CippApiResults = (props) => {
     } else {
       setFetchingVisible(false);
     }
-    const resultsToShow = errorsOnly
-      ? allResults.filter((r) => r.severity === "error")
-      : allResults;
-
-    if (resultsToShow.length > 0) {
-      setFinalResults(
-        resultsToShow.map((res, index) => ({
-          id: index,
-          text: res.text,
-          copyField: res.copyField,
-          severity: res.severity,
-          visible: true,
-          ...res,
-        })),
-      );
-    } else {
-      setFinalResults([]);
+    if (!errorsOnly) {
+      if (allResults.length > 0) {
+        setFinalResults(
+          allResults.map((res, index) => ({
+            id: index,
+            text: res.text,
+            copyField: res.copyField,
+            severity: res.severity,
+            visible: true,
+            ...res,
+          })),
+        );
+      } else {
+        setFinalResults([]);
+      }
     }
   }, [
     apiObject.isError,
@@ -246,7 +244,7 @@ export const CippApiResults = (props) => {
 
   const hasVisibleResults = finalResults.some((r) => r.visible);
   return (
-    <Stack spacing={2} sx={{ minWidth: 0 }}>
+    <Stack spacing={2}>
       {/* Loading alert */}
       {!errorsOnly && (
         <Collapse in={fetchingVisible} unmountOnExit>
