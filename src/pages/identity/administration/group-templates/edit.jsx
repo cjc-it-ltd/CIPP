@@ -46,7 +46,6 @@ const Page = () => {
           allowExternal: templateData.allowExternal,
           tenantFilter: userSettingsDefaults.currentTenant,
         });
-        formControl.trigger();
       }
     }
   }, [template, formControl, userSettingsDefaults.currentTenant]);

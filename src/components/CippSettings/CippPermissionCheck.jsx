@@ -112,17 +112,6 @@ const CippPermissionCheck = (props) => {
     );
   };
 
-  const responseData = executeCheck?.error?.response?.data;
-  const responseText =
-    typeof responseData === "string" ? responseData : responseData ? JSON.stringify(responseData) : "";
-  const shouldShowApiResponse = responseText.includes(
-    "Access to this CIPP API endpoint is not allowed",
-  );
-  const checkErrorMessage =
-    shouldShowApiResponse
-      ? responseText
-      : `Failed to load ${type} check. Please try refreshing the page.`;
-
   return (
     <>
       <CippButtonCard
@@ -152,7 +141,7 @@ const CippPermissionCheck = (props) => {
       >
         {executeCheck.isError && !importReport && (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {checkErrorMessage}
+            Failed to load {type} check. Please try refreshing the page.
           </Alert>
         )}
         {(executeCheck.isSuccess || executeCheck.isLoading) && (

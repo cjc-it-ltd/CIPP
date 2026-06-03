@@ -49,7 +49,11 @@ const Page = () => {
   });
 
   const relationshipList = ApiGetCall({
-    url: "/api/ListGDAPRelationships",
+    url: "/api/ListGraphRequest",
+    data: {
+      TenantFilter: "",
+      Endpoint: "tenantRelationships/delegatedAdminRelationships",
+    },
     queryKey: "GDAPRelationshipOnboarding",
   });
   const onboardingList = ApiGetCallWithPagination({
@@ -313,7 +317,10 @@ const Page = () => {
                   label="Select GDAP Relationship"
                   type="autoComplete"
                   api={{
-                    url: "/api/ListGDAPRelationships",
+                    url: "/api/ListGraphRequest",
+                    data: {
+                      Endpoint: "tenantRelationships/delegatedAdminRelationships",
+                    },
                     excludeTenantFilter: true,
                     queryKey: "GDAPRelationships",
                     dataKey: "Results",

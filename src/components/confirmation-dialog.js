@@ -3,7 +3,6 @@ import ExclamationCircleIcon from '@heroicons/react/24/outline/ExclamationCircle
 import ExclamationTriangleIcon from '@heroicons/react/24/outline/ExclamationTriangleIcon';
 import {
   Button,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -48,26 +47,16 @@ export const ConfirmationDialog = (props) => {
     open = false,
     title,
     variant = 'info',
-    confirmLoading = false,
     ...other
   } = props;
 
   const icon = iconMap[variant];
 
-  const handleDialogClose = (event, reason) => {
-    if (confirmLoading) {
-      return;
-    }
-    if (onCancel) {
-      onCancel(event);
-    }
-  };
-
   return (
     <Dialog
       maxWidth="sm"
       fullWidth
-      onClose={handleDialogClose}
+      onClose={onCancel}
       open={open}
       {...other}>
       <DialogTitle>
@@ -90,21 +79,15 @@ export const ConfirmationDialog = (props) => {
       <DialogActions>
         <Button
           color="inherit"
-          disabled={confirmLoading}
           onClick={onCancel}
         >
           Cancel
         </Button>
         <Button
-          disabled={confirmLoading}
           onClick={onConfirm}
           variant="contained"
         >
-          {confirmLoading ? (
-            <CircularProgress color="inherit" size={22} />
-          ) : (
-            'Confirm'
-          )}
+          Confirm
         </Button>
       </DialogActions>
     </Dialog>
@@ -117,6 +100,5 @@ ConfirmationDialog.propTypes = {
   onConfirm: PropTypes.func,
   open: PropTypes.bool,
   title: PropTypes.string,
-  variant: PropTypes.oneOf(['error', 'warning', 'info']),
-  confirmLoading: PropTypes.bool
+  variant: PropTypes.oneOf(['error', 'warning', 'info'])
 };

@@ -4,6 +4,8 @@ import tabOptions from "../tabOptions";
 import CippTablePage from "../../../../components/CippComponents/CippTablePage";
 import CippGdapActions from "../../../../components/CippComponents/CippGdapActions";
 
+const pageTitle = "GDAP Relationships";
+
 const actions = CippGdapActions();
 
 const simpleColumns = [
@@ -45,12 +47,20 @@ const offCanvas = {
   extendedInfoFields: simpleColumns,
 };
 
+const apiUrl = "/api/ListGraphRequest";
+const apiData = {
+  Endpoint: "tenantRelationships/delegatedAdminRelationships",
+  tenantFilter: "",
+  $top: 300,
+};
+
 const Page = () => {
   return (
     <CippTablePage
-      title="GDAP Relationships"
+      title={pageTitle}
       tenantInTitle={false}
-      apiUrl="/api/ListGDAPRelationships"
+      apiUrl={apiUrl}
+      apiData={apiData}
       apiDataKey="Results"
       queryKey="ListGDAPRelationships"
       actions={actions}

@@ -27,7 +27,6 @@ export const CippVariableAutocomplete = React.memo(
     tenantFilter = null,
     includeSystemVariables = false,
     position = { top: 0, left: 0 }, // Cursor position for floating box
-    customVariables = null,
   }) => {
     const theme = useTheme();
     const settings = useSettings();
@@ -37,7 +36,6 @@ export const CippVariableAutocomplete = React.memo(
     const [getRequestInfo, setGetRequestInfo] = useState({ url: "", waiting: false, queryKey: "" });
     const [filteredVariables, setFilteredVariables] = useState([]);
     const [selectedIndex, setSelectedIndex] = useState(0); // For keyboard navigation
-    const hasCustomVariables = Array.isArray(customVariables);
 
     // Get current tenant like CippAutocomplete does
     const currentTenant = tenantFilter || settings.currentTenant;
@@ -47,27 +45,9 @@ export const CippVariableAutocomplete = React.memo(
       ...getRequestInfo,
     });
 
-    useEffect(() => {
-      if (!hasCustomVariables) {
-        return;
-      }
-
-      const processedVariables = customVariables.map((variable) => ({
-        name: variable.name || variable.label || variable.value || variable.variable,
-        variable: variable.variable || variable.value || variable.label,
-        label: variable.label || variable.value || variable.variable,
-        value: variable.value || variable.variable || variable.label,
-        description: variable.description || "",
-        type: variable.type || "schema",
-        category: variable.category || "custom",
-      }));
-
-      setVariables(processedVariables);
-    }, [customVariables, hasCustomVariables]);
-
     // Setup API request when component mounts or tenant changes
     useEffect(() => {
-      if (open && !hasCustomVariables) {
+      if (open) {
         // Normalize tenant filter
         const normalizedTenantFilter = currentTenant === "AllTenants" ? null : currentTenant;
 
@@ -102,14 +82,10 @@ export const CippVariableAutocomplete = React.memo(
           refetchOnWindowFocus: false,
         });
       }
-    }, [open, currentTenant, includeSystemVariables, hasCustomVariables]);
+    }, [open, currentTenant, includeSystemVariables]);
 
     // Process API response like CippAutocomplete does
     useEffect(() => {
-      if (hasCustomVariables) {
-        return;
-      }
-
       if (actionGetRequest.isSuccess && actionGetRequest.data?.Results) {
         const processedVariables = actionGetRequest.data.Results.map((variable) => ({
           // Core properties
@@ -152,7 +128,7 @@ export const CippVariableAutocomplete = React.memo(
           },
         ]);
       }
-    }, [actionGetRequest.isSuccess, actionGetRequest.isError, actionGetRequest.data, hasCustomVariables]);
+    }, [actionGetRequest.isSuccess, actionGetRequest.isError, actionGetRequest.data]);
 
     // Filter variables based on search query
     useEffect(() => {
@@ -222,7 +198,7 @@ export const CippVariableAutocomplete = React.memo(
     }
 
     // Show loading state like CippAutocomplete
-    if (!hasCustomVariables && actionGetRequest.isLoading && (!variables || variables.length === 0)) {
+    if (actionGetRequest.isLoading && (!variables || variables.length === 0)) {
       return (
         <Popper
           open={open}

@@ -94,9 +94,7 @@ export const CippBulkUserDrawer = ({
   const handleRemoveItem = (row) => {
     if (row === undefined) return false;
     const currentData = formControl.getValues("bulkUser") || [];
-    const rowKey = JSON.stringify(row);
-    const index = currentData.findIndex((item) => JSON.stringify(item) === rowKey);
-    if (index === -1) return false;
+    const index = currentData.findIndex((item) => item === row);
     const newData = [...currentData];
     newData.splice(index, 1);
     formControl.setValue("bulkUser", newData, { shouldValidate: true });
